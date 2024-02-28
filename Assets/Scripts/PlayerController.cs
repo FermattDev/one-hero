@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,6 +11,7 @@ public class PlayerController : AvatarController
     private float timeStart;
 
     private List<KeyValuePair<float, KeyValuePair<string, object>>> actionRecorder = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
+    private Task fireTask;
 
     public Action OnPlayerDead;
 
@@ -43,7 +45,12 @@ public class PlayerController : AvatarController
 
     protected void AvatarFire(InputAction.CallbackContext value)
     {
-        base.AvatarFire(value);
+        if(fireTask != null && !fireTask.IsCompleted)
+        {
+            return;
+        }
+
+        fireTask = base.AvatarFire(value);
 
         AddActionToRecorder("Fire", true);
     }

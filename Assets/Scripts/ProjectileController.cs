@@ -11,6 +11,17 @@ public class ProjectileController : MonoBehaviour
     private void Update()
     {
         transform.position += transform.forward * projectileSpeed * Time.deltaTime;
+
+        if(Camera.main != null)
+        {
+            var v = Camera.main.WorldToViewportPoint(transform.position);
+            if(v.x > 0 && v.x < 1 && v.y > 0 && v.y < 1 && v.z > 0)
+            {
+                return;
+            }
+
+            Destroy(gameObject);
+        }
     }
 
     public void SetProjectileCreator(Transform creator)
