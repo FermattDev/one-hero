@@ -26,6 +26,7 @@ public class LevelManager : MonoBehaviour, Manager
         }
 
         playerInstance = Instantiate(playerPrefab);
+        playerInstance.SetPlayerId(0);
         playerInstance.transform.position = playerStartPosition.position;
         playerInstance.OnPlayerDead += OnPlayerDeadHandler;
     }
@@ -55,6 +56,7 @@ public class LevelManager : MonoBehaviour, Manager
                 ghostInstances.Add(ghostInstance);
             }
 
+            playerInstance.SetPlayerId(ghostInstances.Count);
             OnLevelReset?.Invoke(playerInstance);
         }
     }
@@ -68,5 +70,15 @@ public class LevelManager : MonoBehaviour, Manager
     public PlayerController GetPlayerController()
     {
         return playerInstance;
+    }
+
+    public AvatarController GetAvatarById(int id)
+    {
+        if (ghostInstances.Count >= id)
+        {
+            return playerInstance;
+        }
+
+        return ghostInstances[id];
     }
 }

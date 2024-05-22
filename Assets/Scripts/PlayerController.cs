@@ -12,6 +12,7 @@ public class PlayerController : AvatarController
 
     private List<KeyValuePair<float, KeyValuePair<string, object>>> actionRecorder = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
     private Task fireTask;
+    private int playerId = -1;
 
     public Action OnPlayerDead;
 
@@ -93,5 +94,15 @@ public class PlayerController : AvatarController
     public List<KeyValuePair<float, KeyValuePair<string, object>>> GetActionRecorder()
     {
         return actionRecorder;
+    }
+
+    public void SetPlayerId(int id)
+    {
+        playerId = id;
+    }
+    
+    public int GetPlayerId()
+    {
+        return playerId;
     }
 }

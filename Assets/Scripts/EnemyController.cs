@@ -13,6 +13,7 @@ public class EnemyController : MonoBehaviour
     [SerializeField] protected float fireDelay = 1f;
 
     private PlayerController playerController;
+    private AvatarController avatarTracker;
     private List<KeyValuePair<float, KeyValuePair<string, object>>> actionRecorder = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
 
     private List<KeyValuePair<float, KeyValuePair<string, object>>> actionPlayer = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
@@ -20,20 +21,45 @@ public class EnemyController : MonoBehaviour
     private float timeStart;
     private Task fireTask;
     private int index = 0;
+    private Quaternion initialRotation;
 
     private void Start()
     {
         var levelManager = ManagerLocator.Get<LevelManager>();
         levelManager.OnLevelReset += ResetEnemy;
         playerController = levelManager.GetPlayerController();
+        initialRotation = transform.rotation;
     }
 
     public void ResetEnemy(PlayerController player)
     {
         playerController = player;
         actionStart = true;
+        actionPlayer.AddRange(actionRecorder);
+        actionRecorder.Clear();
         timeStart = Time.time;
         index = 0;
+        transform.rotation = initialRotation;
+    }
+
+    protected virtual void AvatarSetTracker(object value)
+    {
+        int avatarId = (int)value;
+
+        if (avatarId < 0)
+        {
+            avatarTracker = null;
+            return;
+        }
+        
+        var levelManager = ManagerLocator.Get<LevelManager>();
+        
+        avatarTracker = levelManager.GetAvatarById(avatarId);
+        
+        if(!actionStart)
+        {
+            AddActionToRecorder("Tracker", value);
+        }
     }
 
     protected virtual async Task AvatarFire(object value)
@@ -47,7 +73,7 @@ public class EnemyController : MonoBehaviour
 
         if(!actionStart)
         {
-            AddActionToRecorder("Fire", true);
+            AddActionToRecorder("Fire", value);
         }
 
         await Task.Delay((int)(fireDelay * 1000));
@@ -72,19 +98,37 @@ public class EnemyController : MonoBehaviour
 
     private void Update()
     {
+        var isTrackingAvatar = avatarTracker != null;
+        
+        if (isTrackingAvatar)
+        {
+            Vector3 direction = avatarTracker.transform.position - transform.position;
+            Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
+            transform.rotation = rotation;
+        }
+        
         if (!actionStart)
         {
-            if(playerController == null || (fireTask != null && !fireTask.IsCompleted))
+            if(playerController == null)
             {
                 return;
             }
-            if((playerController.transform.position - transform.position).magnitude < detectionRange)
+            if(!isTrackingAvatar && (playerController.transform.position - transform.position).magnitude < detectionRange)
             {
-                Vector3 direction = playerController.transform.position - transform.position;
-                Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
-                transform.rotation = rotation;
+                AvatarSetTracker(playerController.GetPlayerId());
+            }
+            if(isTrackingAvatar && (playerController.transform.position - transform.position).magnitude > detectionRange)
+            {
+                AvatarSetTracker(-1);
+            }
 
-                fireTask = AvatarFire(direction);
+            if (isTrackingAvatar)
+            {
+                if(fireTask == null || fireTask.IsCompleted)
+                {
+                    Vector3 direction = avatarTracker.transform.position - transform.position;
+                    fireTask = AvatarFire(direction);
+                }
             }
             return;
         }
@@ -99,6 +143,9 @@ public class EnemyController : MonoBehaviour
                         break;
                     case "Dead":
                         AvatarDead();
+                        break;
+                    case "Tracker":
+                        AvatarSetTracker(actionPlayer[index].Value.Value);
                         break;
                 }
 

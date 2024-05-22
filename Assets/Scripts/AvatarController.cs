@@ -15,6 +15,7 @@ public class AvatarController : MonoBehaviour
     [SerializeField] private ProjectileController projectilePrefab;
 
     private Vector3 currentMovement = Vector3.zero;
+    private Vector3 currentDirection = Vector3.up;
     private Vector3 currentDashMovement = Vector3.zero;
 
     private float dashSpeed = 0;
@@ -25,13 +26,19 @@ public class AvatarController : MonoBehaviour
         vec = vec * playerSpeed;
         var movement = new Vector3(vec.x, vec.y, 0);
         currentMovement = movement;
+        
+        //TODO: remove after analog implementation
+        if (currentMovement != Vector3.zero)
+        {
+            currentDirection = currentMovement;
+        }
     }
 
     protected virtual async Task AvatarFire(object value)
     {
         var projectile = Instantiate(projectilePrefab);
         projectile.transform.position = transform.position;
-        projectile.SetProjectileDirection(currentMovement);
+        projectile.SetProjectileDirection(currentDirection);
         projectile.SetProjectileCreator(transform);
 
         await Task.Delay((int)(fireDelay * 1000));
