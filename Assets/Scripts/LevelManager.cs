@@ -74,11 +74,11 @@ public class LevelManager : MonoBehaviour, Manager
 
     public AvatarController GetAvatarById(int id)
     {
-        if (ghostInstances.Count >= id)
+        if (id < ghostInstances.Count)
         {
-            return playerInstance;
+            return ghostInstances[id];
         }
 
-        return ghostInstances[id];
+        return playerInstance;
     }
 }
