@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using static UnityEngine.GraphicsBuffer;
 
-public class EnemyController : MonoBehaviour
+public class EnemyController : EntityController
 {
     [SerializeField] private ProjectileController projectilePrefab;
     [SerializeField] private float detectionRange = 3;
@@ -14,32 +14,31 @@ public class EnemyController : MonoBehaviour
 
     private PlayerController playerController;
     private AvatarController avatarTracker;
-    private List<KeyValuePair<float, KeyValuePair<string, object>>> actionRecorder = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
-
-    private List<KeyValuePair<float, KeyValuePair<string, object>>> actionPlayer = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
-    private bool actionStart = false;
-    private float timeStart;
+    private bool actionStart;
     private Task fireTask;
     private int index = 0;
+    private Vector3 initialPosition;
     private Quaternion initialRotation;
+    private LevelManager levelManager;
 
-    private void Start()
+    protected override void Start()
     {
-        var levelManager = ManagerLocator.Get<LevelManager>();
+        base.Start();
+        levelManager = ManagerLocator.Get<LevelManager>();
         levelManager.OnLevelReset += ResetEnemy;
         playerController = levelManager.GetPlayerController();
         initialRotation = transform.rotation;
+        initialPosition = transform.position;
     }
 
     public void ResetEnemy(PlayerController player)
     {
+        ResetEntity();
         playerController = player;
         actionStart = true;
-        actionPlayer.AddRange(actionRecorder);
-        actionRecorder.Clear();
-        timeStart = Time.time;
         index = 0;
         transform.rotation = initialRotation;
+        transform.position = initialPosition;
     }
 
     protected virtual void AvatarSetTracker(object value)
@@ -52,8 +51,6 @@ public class EnemyController : MonoBehaviour
             return;
         }
         
-        var levelManager = ManagerLocator.Get<LevelManager>();
-        
         avatarTracker = levelManager.GetAvatarById(avatarId);
         
         if(!actionStart)
@@ -62,9 +59,16 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    protected virtual async Task AvatarFire(object value)
+    protected virtual async Task AvatarFire()
     {
-        Vector3 direction = (Vector3)value;
+        await Task.Delay((int)(fireDelay * 1000));
+
+        if (avatarTracker == null)
+        {
+            return;
+        }
+        
+        Vector3 direction = avatarTracker.transform.position - transform.position;
 
         var projectile = Instantiate(projectilePrefab);
         projectile.transform.position = transform.position;
@@ -73,17 +77,8 @@ public class EnemyController : MonoBehaviour
 
         if(!actionStart)
         {
-            AddActionToRecorder("Fire", value);
+            AddActionToRecorder("Fire", true);
         }
-
-        await Task.Delay((int)(fireDelay * 1000));
-    }
-
-    private void AddActionToRecorder(string key, object value)
-    {
-        var actionValue = new KeyValuePair<string, object>(key, value);
-        var action = new KeyValuePair<float, KeyValuePair<string, object>>(Time.time - timeStart, actionValue);
-        actionRecorder.Add(action);
     }
 
     protected virtual void AvatarDead()
@@ -115,7 +110,7 @@ public class EnemyController : MonoBehaviour
             }
             if(!isTrackingAvatar && (playerController.transform.position - transform.position).magnitude < detectionRange)
             {
-                AvatarSetTracker(playerController.GetPlayerId());
+                AvatarSetTracker(playerController.AvatarId);
             }
             if(isTrackingAvatar && (playerController.transform.position - transform.position).magnitude > detectionRange)
             {
@@ -126,26 +121,25 @@ public class EnemyController : MonoBehaviour
             {
                 if(fireTask == null || fireTask.IsCompleted)
                 {
-                    Vector3 direction = avatarTracker.transform.position - transform.position;
-                    fireTask = AvatarFire(direction);
+                    fireTask = AvatarFire();
                 }
             }
             return;
         }
-        if (actionPlayer.Count > index)
+        if (ActionRecorder.Count > index)
         {
-            if ((actionPlayer[index].Key) < Time.time - timeStart)
+            if ((ActionRecorder[index].Key) < Time.time - TimeStart)
             {
-                switch (actionPlayer[index].Value.Key)
+                switch (ActionRecorder[index].Value.Key)
                 {
                     case "Fire":
-                        fireTask = AvatarFire(actionPlayer[index].Value.Value);
+                        fireTask = AvatarFire();
                         break;
                     case "Dead":
                         AvatarDead();
                         break;
                     case "Tracker":
-                        AvatarSetTracker(actionPlayer[index].Value.Value);
+                        AvatarSetTracker(ActionRecorder[index].Value.Value);
                         break;
                 }
 

@@ -21,19 +21,28 @@ public class LevelManager : MonoBehaviour, Manager
     {
         if(!ManagerLocator.Set<LevelManager>(this))
         {
+            Debug.LogError("More than one LevelManager tried to awake.");
             Destroy(gameObject);
             return;
         }
 
         playerInstance = Instantiate(playerPrefab);
-        playerInstance.SetPlayerId(0);
+        playerInstance.AvatarId = 0;
         playerInstance.transform.position = playerStartPosition.position;
         playerInstance.OnPlayerDead += OnPlayerDeadHandler;
     }
 
+    private void OnDestroy()
+    {
+        if(playerInstance != null)
+        {
+            playerInstance.OnPlayerDead -= OnPlayerDeadHandler;
+        }
+    }
+
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R) && playerInstance == null)
+        if (Input.GetKeyDown(KeyCode.R) && playerInstance.gameObject.activeSelf == false)
         {
             foreach (var ghost in ghostInstances)
             {
@@ -45,18 +54,21 @@ public class LevelManager : MonoBehaviour, Manager
 
             ghostInstances.Clear();
 
-            playerInstance = Instantiate(playerPrefab, playerStartPosition);
-            playerInstance.OnPlayerDead += OnPlayerDeadHandler;
+            playerInstance.transform.position = playerStartPosition.position;
+            playerInstance.transform.rotation = playerStartPosition.rotation;
+            playerInstance.gameObject.SetActive(true);
 
+            //TODO: Remove ghost instantiare and reutilize already created ghosts.
             foreach (var action in ghostActions)
             {
                 var ghostInstance = Instantiate(ghostPrefab);
                 ghostInstance.transform.position = playerInstance.transform.position;
                 ghostInstance.SetActionPlayer(action);
+                ghostInstance.AvatarId = ghostInstances.Count;
                 ghostInstances.Add(ghostInstance);
             }
 
-            playerInstance.SetPlayerId(ghostInstances.Count);
+            playerInstance.AvatarId = ghostInstances.Count;
             OnLevelReset?.Invoke(playerInstance);
         }
     }
@@ -64,7 +76,7 @@ public class LevelManager : MonoBehaviour, Manager
     private void OnPlayerDeadHandler()
     {
         ghostActions.Add(playerInstance.GetActionRecorder());
-        playerInstance = null;
+        playerInstance.gameObject.SetActive(false);
     }
 
     public PlayerController GetPlayerController()
@@ -74,11 +86,20 @@ public class LevelManager : MonoBehaviour, Manager
 
     public AvatarController GetAvatarById(int id)
     {
-        if (id < ghostInstances.Count)
+        if (playerInstance.AvatarId == id)
         {
-            return ghostInstances[id];
+            return playerInstance;
+        }
+        
+        foreach (var ghostInstance in ghostInstances)
+        {
+            if (id == ghostInstance.AvatarId)
+            {
+                return ghostInstance;
+            }
         }
 
-        return playerInstance;
+        Debug.LogError($"There is no avatar of ID {id}");
+        return null;
     }
 }

@@ -8,18 +8,9 @@ public class PlayerController : AvatarController
 {
     [SerializeField] private PlayerInput playerInput;
 
-    private float timeStart;
-
-    private List<KeyValuePair<float, KeyValuePair<string, object>>> actionRecorder = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
     private Task fireTask;
-    private int playerId = -1;
 
     public Action OnPlayerDead;
-
-    private void Start()
-    {
-        timeStart = Time.time;
-    }
 
     void OnEnable()
     {
@@ -72,13 +63,6 @@ public class PlayerController : AvatarController
         base.AvatarDead();
     }
 
-    private void AddActionToRecorder(string key, object value)
-    {
-        var actionValue = new KeyValuePair<string, object>(key, value);
-        var action = new KeyValuePair<float, KeyValuePair<string, object>>(Time.time - timeStart, actionValue);
-        actionRecorder.Add(action);
-    }
-
     protected override void Update()
     {
         base.Update();
@@ -89,20 +73,5 @@ public class PlayerController : AvatarController
         {
             AvatarDead();
         }
-    }
-
-    public List<KeyValuePair<float, KeyValuePair<string, object>>> GetActionRecorder()
-    {
-        return actionRecorder;
-    }
-
-    public void SetPlayerId(int id)
-    {
-        playerId = id;
-    }
-    
-    public int GetPlayerId()
-    {
-        return playerId;
     }
 }

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class AvatarController : MonoBehaviour
+public class AvatarController : EntityController
 {
     [SerializeField] protected float playerSpeed = 1;
     [SerializeField] protected float dashMaxSpeed = 2;
@@ -19,6 +19,13 @@ public class AvatarController : MonoBehaviour
     private Vector3 currentDashMovement = Vector3.zero;
 
     private float dashSpeed = 0;
+    protected int avatarId = -1;
+
+    public int AvatarId
+    {
+        get => avatarId;
+        set => avatarId = value;
+    }
 
     protected virtual void AvatarMove(object value)
     {
