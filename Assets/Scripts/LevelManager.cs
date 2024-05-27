@@ -29,14 +29,14 @@ public class LevelManager : MonoBehaviour, Manager
         playerInstance = Instantiate(playerPrefab);
         playerInstance.AvatarId = 0;
         playerInstance.transform.position = playerStartPosition.position;
-        playerInstance.OnPlayerDead += OnPlayerDeadHandler;
+        playerInstance.OnEntityDead += OnPlayerDeadHandler;
     }
 
     private void OnDestroy()
     {
         if(playerInstance != null)
         {
-            playerInstance.OnPlayerDead -= OnPlayerDeadHandler;
+            playerInstance.OnEntityDead -= OnPlayerDeadHandler;
         }
     }
 
@@ -75,8 +75,10 @@ public class LevelManager : MonoBehaviour, Manager
 
     private void OnPlayerDeadHandler()
     {
-        ghostActions.Add(playerInstance.GetActionRecorder());
-        playerInstance.gameObject.SetActive(false);
+        var actions = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
+        actions.AddRange(playerInstance.GetActionRecorder());
+        ghostActions.Add(actions);
+        playerInstance.ClearActionRecorder();
     }
 
     public PlayerController GetPlayerController()

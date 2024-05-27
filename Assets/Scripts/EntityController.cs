@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ public class EntityController : MonoBehaviour
 
     protected float TimeStart => timeStart;
     protected List<KeyValuePair<float, KeyValuePair<string, object>>> ActionRecorder => actionRecorder;
+    
+    public Action OnEntityDead;
 
     protected virtual void Start()
     {
@@ -28,9 +31,20 @@ public class EntityController : MonoBehaviour
     {
         return actionRecorder;
     }
+    
+    public void ClearActionRecorder()
+    {
+        actionRecorder.Clear();
+        ResetEntity();
+    }
 
     protected void ResetEntity()
     {
         timeStart = Time.time;
+    }
+
+    public void KillEntity()
+    {
+        OnEntityDead?.Invoke();
     }
 }

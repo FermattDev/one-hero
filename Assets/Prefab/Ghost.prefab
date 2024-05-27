@@ -97,7 +97,7 @@ GameObject:
   - component: {fileID: 1694223616882027090}
   m_Layer: 0
   m_Name: Ghost
-  m_TagString: Untagged
+  m_TagString: Ghost
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -164,4 +164,5 @@ MonoBehaviour:
   dashMaxSpeed: 8
   dashMinSpeed: 0.2
   dashTotalTime: 0.3
+  fireDelay: 0.5
   projectilePrefab: {fileID: 2228267147140375583, guid: 87dd37a4042a5b44d8ed0f459cffcb37, type: 3}

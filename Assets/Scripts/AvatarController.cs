@@ -59,7 +59,7 @@ public class AvatarController : EntityController
 
     protected virtual void AvatarDead()
     {
-        Destroy(gameObject);
+        gameObject.SetActive(false);
     }
 
     protected virtual void Update()

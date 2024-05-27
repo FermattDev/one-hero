@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,12 +6,14 @@ using UnityEngine;
 public class ProjectileController : MonoBehaviour
 {
     [SerializeField] private float projectileSpeed;
+    [SerializeField] private List<string> collisionTags;
 
     private Transform projectileCreator;
+    private Vector3 proyectileDirection;
 
     private void Update()
     {
-        transform.position += transform.forward * projectileSpeed * Time.deltaTime;
+        transform.position += proyectileDirection * projectileSpeed * Time.deltaTime;
 
         if(Camera.main != null)
         {
@@ -31,6 +34,19 @@ public class ProjectileController : MonoBehaviour
 
     public void SetProjectileDirection(Vector3 direction)
     {
-        gameObject.transform.LookAt(transform.position + direction.normalized, -Vector3.forward);
+        proyectileDirection = direction;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (collisionTags.Contains(other.transform.tag))
+        {
+            var controller = other.transform.GetComponent<EntityController>();
+            if (controller != null)
+            {
+                controller.KillEntity();
+                Destroy(gameObject);
+            }
+        }
     }
 }

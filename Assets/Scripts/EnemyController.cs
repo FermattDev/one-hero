@@ -8,18 +8,18 @@ using static UnityEngine.GraphicsBuffer;
 
 public class EnemyController : EntityController
 {
-    [SerializeField] private ProjectileController projectilePrefab;
-    [SerializeField] private float detectionRange = 3;
+    [SerializeField] protected ProjectileController projectilePrefab;
+    [SerializeField] protected float detectionRange = 3;
     [SerializeField] protected float fireDelay = 1f;
 
-    private PlayerController playerController;
-    private AvatarController avatarTracker;
-    private bool actionStart;
-    private Task fireTask;
-    private int index = 0;
-    private Vector3 initialPosition;
-    private Quaternion initialRotation;
-    private LevelManager levelManager;
+    protected PlayerController playerController;
+    protected AvatarController avatarTracker;
+    protected bool actionStart;
+    protected Task fireTask;
+    protected int index = 0;
+    protected Vector3 initialPosition;
+    protected Quaternion initialRotation;
+    protected LevelManager levelManager;
 
     protected override void Start()
     {
@@ -29,6 +29,17 @@ public class EnemyController : EntityController
         playerController = levelManager.GetPlayerController();
         initialRotation = transform.rotation;
         initialPosition = transform.position;
+        
+        OnEntityDead += AvatarDead;
+    }
+
+    private void OnDestroy()
+    {
+        if (levelManager != null)
+        {
+            levelManager.OnLevelReset -= ResetEnemy;
+        }
+        OnEntityDead -= AvatarDead;
     }
 
     public void ResetEnemy(PlayerController player)
@@ -61,20 +72,6 @@ public class EnemyController : EntityController
 
     protected virtual async Task AvatarFire()
     {
-        await Task.Delay((int)(fireDelay * 1000));
-
-        if (avatarTracker == null)
-        {
-            return;
-        }
-        
-        Vector3 direction = avatarTracker.transform.position - transform.position;
-
-        var projectile = Instantiate(projectilePrefab);
-        projectile.transform.position = transform.position;
-        projectile.SetProjectileDirection(direction.normalized);
-        projectile.SetProjectileCreator(transform);
-
         if(!actionStart)
         {
             AddActionToRecorder("Fire", true);
@@ -83,7 +80,7 @@ public class EnemyController : EntityController
 
     protected virtual void AvatarDead()
     {
-        Destroy(gameObject);
+        gameObject.SetActive(false);
 
         if (!actionStart)
         {
@@ -91,41 +88,8 @@ public class EnemyController : EntityController
         }
     }
 
-    private void Update()
+    protected virtual void Update()
     {
-        var isTrackingAvatar = avatarTracker != null;
-        
-        if (isTrackingAvatar)
-        {
-            Vector3 direction = avatarTracker.transform.position - transform.position;
-            Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
-            transform.rotation = rotation;
-        }
-        
-        if (!actionStart)
-        {
-            if(playerController == null)
-            {
-                return;
-            }
-            if(!isTrackingAvatar && (playerController.transform.position - transform.position).magnitude < detectionRange)
-            {
-                AvatarSetTracker(playerController.AvatarId);
-            }
-            if(isTrackingAvatar && (playerController.transform.position - transform.position).magnitude > detectionRange)
-            {
-                AvatarSetTracker(-1);
-            }
-
-            if (isTrackingAvatar)
-            {
-                if(fireTask == null || fireTask.IsCompleted)
-                {
-                    fireTask = AvatarFire();
-                }
-            }
-            return;
-        }
         if (ActionRecorder.Count > index)
         {
             if ((ActionRecorder[index].Key) < Time.time - TimeStart)

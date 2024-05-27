@@ -10,13 +10,13 @@ public class PlayerController : AvatarController
 
     private Task fireTask;
 
-    public Action OnPlayerDead;
-
     void OnEnable()
     {
         playerInput.actions["Move"].performed += AvatarMove;
         playerInput.actions["Fire"].performed += AvatarFire;
         playerInput.actions["Dash"].performed += AvatarDash;
+
+        OnEntityDead += AvatarDead;
     }
 
     void OnDisable()
@@ -24,6 +24,8 @@ public class PlayerController : AvatarController
         playerInput.actions["Move"].performed -= AvatarMove;
         playerInput.actions["Fire"].performed -= AvatarFire;
         playerInput.actions["Dash"].performed -= AvatarDash;
+        
+        OnEntityDead -= AvatarDead;
     }
 
     protected void AvatarMove(InputAction.CallbackContext value)
@@ -57,8 +59,6 @@ public class PlayerController : AvatarController
     protected override void AvatarDead()
     {
         AddActionToRecorder("Dead", true);
-
-        OnPlayerDead?.Invoke();
 
         base.AvatarDead();
     }
