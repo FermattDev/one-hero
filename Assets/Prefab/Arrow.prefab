@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2228267147140375580}
   - component: {fileID: 2228267147140375583}
   - component: {fileID: 3573491303971248968}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Arrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -46,9 +46,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc6071fd69ca9904eaaadd5b8fb1128b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  collisionHandler: {fileID: 2838227709064348548}
   projectileSpeed: 5
-  collisionTags:
-  - Enemy
 --- !u!50 &3573491303971248968
 Rigidbody2D:
   serializedVersion: 4
@@ -81,7 +80,8 @@ GameObject:
   - component: {fileID: 2228267148434011177}
   - component: {fileID: 2228267148434011176}
   - component: {fileID: 8856776515727112393}
-  m_Layer: 0
+  - component: {fileID: 2838227709064348548}
+  m_Layer: 8
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -183,3 +183,15 @@ PolygonCollider2D:
     - - {x: 0, y: 0.5773587}
       - {x: -0.5, y: -0.28866667}
       - {x: 0.5, y: -0.28866667}
+--- !u!114 &2838227709064348548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2228267148434011182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcb38efc5166b49db8a48e5905b7df53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -7,6 +7,8 @@ using UnityEngine.InputSystem;
 
 public class EntityController : MonoBehaviour
 {
+    [SerializeField] private CollisionHandler collisionHandler;
+    
     private float timeStart;
     private List<KeyValuePair<float, KeyValuePair<string, object>>> actionRecorder = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
 
@@ -18,6 +20,8 @@ public class EntityController : MonoBehaviour
     protected virtual void Start()
     {
         ResetEntity();
+        
+        collisionHandler.OnTriggerEnter += KillEntity;
     }
     
     protected void AddActionToRecorder(string key, object value)
@@ -25,6 +29,12 @@ public class EntityController : MonoBehaviour
         var actionValue = new KeyValuePair<string, object>(key, value);
         var action = new KeyValuePair<float, KeyValuePair<string, object>>(Time.time - timeStart, actionValue);
         actionRecorder.Add(action);
+    }
+    
+    protected void AddLastActionToRecorder(string key, object value, int index)
+    {
+        actionRecorder.RemoveRange(index, actionRecorder.Count - index);
+        AddActionToRecorder(key, value);
     }
     
     public List<KeyValuePair<float, KeyValuePair<string, object>>> GetActionRecorder()
@@ -46,5 +56,10 @@ public class EntityController : MonoBehaviour
     public void KillEntity()
     {
         OnEntityDead?.Invoke();
+    }
+    
+    protected virtual void KillEntity(Collider2D other)
+    {
+        KillEntity();
     }
 }

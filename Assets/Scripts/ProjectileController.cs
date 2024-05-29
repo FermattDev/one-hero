@@ -5,31 +5,19 @@ using UnityEngine;
 
 public class ProjectileController : MonoBehaviour
 {
+    [SerializeField] private CollisionHandler collisionHandler;
     [SerializeField] private float projectileSpeed;
-    [SerializeField] private List<string> collisionTags;
-
-    private Transform projectileCreator;
+    
     private Vector3 proyectileDirection;
+
+    private void Start()
+    {
+        collisionHandler.OnTriggerEnter += DestroyProjectile;
+    }
 
     private void Update()
     {
         transform.position += proyectileDirection * projectileSpeed * Time.deltaTime;
-
-        if(Camera.main != null)
-        {
-            var v = Camera.main.WorldToViewportPoint(transform.position);
-            if(v.x > 0 && v.x < 1 && v.y > 0 && v.y < 1 && v.z > 0)
-            {
-                return;
-            }
-
-            Destroy(gameObject);
-        }
-    }
-
-    public void SetProjectileCreator(Transform creator)
-    {
-        projectileCreator = creator;
     }
 
     public void SetProjectileDirection(Vector3 direction)
@@ -37,16 +25,8 @@ public class ProjectileController : MonoBehaviour
         proyectileDirection = direction;
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void DestroyProjectile(Collider2D other)
     {
-        if (collisionTags.Contains(other.transform.tag))
-        {
-            var controller = other.transform.GetComponent<EntityController>();
-            if (controller != null)
-            {
-                controller.KillEntity();
-                Destroy(gameObject);
-            }
-        }
+        Destroy(gameObject);
     }
 }

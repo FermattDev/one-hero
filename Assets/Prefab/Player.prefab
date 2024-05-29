@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 2982835043806912458}
   - component: {fileID: 2982835043806912459}
   - component: {fileID: 489935030748251360}
-  m_Layer: 0
+  - component: {fileID: 4111783850193278767}
+  m_Layer: 6
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -111,6 +112,18 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &4111783850193278767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2982835043806912461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcb38efc5166b49db8a48e5905b7df53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2982835043987974401
 GameObject:
   m_ObjectHideFlags: 0
@@ -123,7 +136,7 @@ GameObject:
   - component: {fileID: 2982835043987974412}
   - component: {fileID: 2982835043987974413}
   - component: {fileID: 1016874070374261303}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -188,6 +201,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7de73da3d07fc64f80b1412cd57c4f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  collisionHandler: {fileID: 4111783850193278767}
   playerSpeed: 2
   dashMaxSpeed: 8
   dashMinSpeed: 0.2

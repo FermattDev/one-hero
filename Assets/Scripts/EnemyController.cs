@@ -31,6 +31,7 @@ public class EnemyController : EntityController
         initialPosition = transform.position;
         
         OnEntityDead += AvatarDead;
+
     }
 
     private void OnDestroy()
@@ -46,6 +47,7 @@ public class EnemyController : EntityController
     {
         ResetEntity();
         playerController = player;
+        avatarTracker = null;
         actionStart = true;
         index = 0;
         transform.rotation = initialRotation;
@@ -86,10 +88,19 @@ public class EnemyController : EntityController
         {
             AddActionToRecorder("Dead", true);
         }
+        else
+        {
+            AddLastActionToRecorder("Dead", true, index);
+        }
     }
 
     protected virtual void Update()
     {
+        if (!avatarTracker.gameObject.activeSelf)
+        {
+            avatarTracker = null;
+        }
+        
         if (ActionRecorder.Count > index)
         {
             if ((ActionRecorder[index].Key) < Time.time - TimeStart)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -27,6 +28,18 @@ public class AvatarController : EntityController
         set => avatarId = value;
     }
 
+    private void OnEnable()
+    {
+        ResetValues();
+    }
+
+    protected void ResetValues()
+    {
+        currentMovement = Vector3.zero;
+        currentDirection = Vector3.up;
+        currentDashMovement = Vector3.zero;
+    }
+
     protected virtual void AvatarMove(object value)
     {
         Vector2 vec = (Vector2) value;
@@ -46,7 +59,6 @@ public class AvatarController : EntityController
         var projectile = Instantiate(projectilePrefab);
         projectile.transform.position = transform.position;
         projectile.SetProjectileDirection(currentDirection);
-        projectile.SetProjectileCreator(transform);
 
         await Task.Delay((int)(fireDelay * 1000));
     }

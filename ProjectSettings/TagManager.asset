@@ -3,7 +3,9 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Enemy
+  - Ghost
   layers:
   - Default
   - TransparentFX
@@ -11,12 +13,12 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Player
+  - Ghost
+  - Projectile
+  - EnemyProjectile
+  - Enemy
+  - Obstacle
   - 
   - 
   - 

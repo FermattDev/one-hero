@@ -29,14 +29,14 @@ public class LevelManager : MonoBehaviour, Manager
         playerInstance = Instantiate(playerPrefab);
         playerInstance.AvatarId = 0;
         playerInstance.transform.position = playerStartPosition.position;
-        playerInstance.OnEntityDead += OnPlayerDeadHandler;
+        playerInstance.PlayerDead += OnPlayerDeadHandler;
     }
 
     private void OnDestroy()
     {
         if(playerInstance != null)
         {
-            playerInstance.OnEntityDead -= OnPlayerDeadHandler;
+            playerInstance.PlayerDead -= OnPlayerDeadHandler;
         }
     }
 

@@ -22,7 +22,6 @@ public class RangerEnemyController : EnemyController
         var projectile = Instantiate(projectilePrefab);
         projectile.transform.position = transform.position;
         projectile.SetProjectileDirection(direction.normalized);
-        projectile.SetProjectileCreator(transform);
 
         await base.AvatarFire();
     }
