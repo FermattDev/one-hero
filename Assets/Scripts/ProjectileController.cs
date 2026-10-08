@@ -12,6 +12,12 @@ public class ProjectileController : MonoBehaviour
     {
         transform.position += transform.forward * projectileSpeed * Time.deltaTime;
 
+        if (CheckEnemyHit())
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         if(Camera.main != null)
         {
             var v = Camera.main.WorldToViewportPoint(transform.position);
@@ -22,6 +28,25 @@ public class ProjectileController : MonoBehaviour
 
             Destroy(gameObject);
         }
+    }
+
+    private bool CheckEnemyHit()
+    {
+        // Enemy projectiles must not damage other enemies.
+        if (projectileCreator != null && projectileCreator.GetComponent<EnemyController>() != null)
+        {
+            return false;
+        }
+
+        foreach (var enemy in EnemyController.Active)
+        {
+            if (enemy.IsHitBy(transform.position))
+            {
+                enemy.TakeDamage(1);
+                return true;
+            }
+        }
+        return false;
     }
 
     public void SetProjectileCreator(Transform creator)
