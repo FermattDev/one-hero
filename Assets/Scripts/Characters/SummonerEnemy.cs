@@ -9,6 +9,12 @@ public class SummonerEnemy : EnemyController
     [SerializeField] private int maxMinions = 3;
     [SerializeField] private float moveSpeed = 1f;
     [SerializeField] private float keepDistance = 4f;
+    [Tooltip("Optional area the summoner is kept inside while retreating. Zero size means unbounded.")]
+    [SerializeField] private Rect moveBounds;
+
+    [Header("Boss")]
+    [SerializeField] private int bossSpawnCount = 10;
+    [SerializeField] private int bossMaxMinions = 20;
 
     private readonly List<ChaserEnemy> minions = new List<ChaserEnemy>();
     private float spawnTimer;
@@ -50,9 +56,17 @@ public class SummonerEnemy : EnemyController
         transform.rotation = Quaternion.LookRotation(Vector3.forward, toPlayer);
 
         // Back away from the player to keep its distance.
-        if (toPlayer.magnitude < keepDistance)
+        if (toPlayer.magnitude < keepDistance * SizeFactor)
         {
             transform.position -= toPlayer.normalized * moveSpeed * Time.deltaTime;
+
+            if (moveBounds.width > 0f && moveBounds.height > 0f)
+            {
+                var p = transform.position;
+                p.x = Mathf.Clamp(p.x, moveBounds.xMin, moveBounds.xMax);
+                p.y = Mathf.Clamp(p.y, moveBounds.yMin, moveBounds.yMax);
+                transform.position = p;
+            }
         }
 
         spawnTimer += Time.deltaTime;
@@ -62,14 +76,21 @@ public class SummonerEnemy : EnemyController
         }
 
         minions.RemoveAll(m => m == null || !m.IsAlive);
-        if (minions.Count >= maxMinions)
+        if (minions.Count >= (isBoss ? bossMaxMinions : maxMinions))
         {
             return;
         }
 
         spawnTimer = 0f;
-        var minion = Instantiate(minionPrefab, transform.position, Quaternion.identity);
-        minion.Aggro();
-        minions.Add(minion);
+
+        int count = isBoss ? Mathf.Min(bossSpawnCount, bossMaxMinions - minions.Count) : 1;
+        for (int i = 0; i < count; i++)
+        {
+            // Boss minions are scattered around it so they do not stack on one point.
+            Vector3 offset = isBoss ? (Vector3)(Random.insideUnitCircle * SizeFactor * 0.6f) : Vector3.zero;
+            var minion = Instantiate(minionPrefab, transform.position + offset, Quaternion.identity);
+            minion.Aggro();
+            minions.Add(minion);
+        }
     }
 }

@@ -19,6 +19,12 @@ public abstract class EnemyController : MonoBehaviour
 
     //public static readonly List<EnemyController> Active = new List<EnemyController>();
 
+    [Header("Boss")]
+    [SerializeField] protected bool isBoss;
+    [SerializeField] private float bossScale = 5f;
+    [SerializeField] private float bossHealthMultiplier = 4f;
+    [SerializeField] private float bossProjectileScale = 2f;
+
     protected int health;
     private LevelManager levelManager;
     private Transform lifebarRoot;
@@ -26,10 +32,36 @@ public abstract class EnemyController : MonoBehaviour
     private SpriteRenderer lifebarFillRenderer;
     private static Sprite whiteSprite;
 
+    // Multiplier for sizes and distances (radii, ranges) so bosses scale with their body.
+    protected float SizeFactor => isBoss ? bossScale : 1f;
+
     private void Awake()
     {
+        if (isBoss)
+        {
+            transform.localScale *= bossScale;
+            maxHealth = Mathf.RoundToInt(maxHealth * bossHealthMultiplier);
+            detectionRange *= bossScale;
+            hitRadius *= bossScale;
+            lifebarOffset *= bossScale;
+            lifebarSize *= bossScale;
+        }
+
         health = maxHealth;
         CreateLifebar();
+    }
+
+    // Enlarges projectiles fired by bosses.
+    protected void SpawnProjectile(ProjectileController prefab, Vector3 direction)
+    {
+        var projectile = Instantiate(prefab);
+        projectile.transform.position = transform.position;
+        if (isBoss)
+        {
+            projectile.transform.localScale *= bossProjectileScale;
+        }
+
+        projectile.SetProjectileDirection(direction);
     }
 
     private void OnDestroy()
@@ -47,14 +79,23 @@ public abstract class EnemyController : MonoBehaviour
 
     public bool IsAlive => health > 0;
 
+    public bool IsBoss => isBoss;
+
+    public static event System.Action<EnemyController> BossDefeated;
+
     public virtual void TakeDamage(int amount)
     {
+        bool wasAlive = health > 0;
         health = Mathf.Max(0, health - amount);
         UpdateLifebar();
 
         if (health <= 0)
         {
             AvatarDead();
+            if (wasAlive && isBoss)
+            {
+                BossDefeated?.Invoke(this);
+            }
         }
     }
 

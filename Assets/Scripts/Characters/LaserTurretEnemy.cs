@@ -12,6 +12,11 @@ public class LaserTurretEnemy : EnemyController
     [SerializeField] private float beamWidth = 0.3f;
     [SerializeField] private LayerMask wallMask = ~0;
 
+    [Header("Boss")]
+    [SerializeField] private float bossSweepSpeed = 60f;
+    [SerializeField] private float bossBeamDurationMultiplier = 3f;
+    [SerializeField] private float bossChargeTimeMultiplier = 0.6f;
+
     private static readonly Color TelegraphColor = new Color(1f, 0.2f, 0.2f, 0.35f);
     private static readonly Color BeamColor = new Color(1f, 0.1f, 0.1f, 0.9f);
     private const float TelegraphWidth = 0.05f;
@@ -67,16 +72,23 @@ public class LaserTurretEnemy : EnemyController
 
             case State.Charging:
                 UpdateBeam(TelegraphWidth, TelegraphColor);
-                if (stateTimer >= chargeTime)
+                if (stateTimer >= chargeTime * (isBoss ? bossChargeTimeMultiplier : 1f))
                 {
                     SetState(State.Firing);
                 }
                 break;
 
             case State.Firing:
-                UpdateBeam(beamWidth, BeamColor);
+                if (isBoss)
+                {
+                    // Boss beam sweeps across the arena while firing.
+                    aimDirection = Quaternion.Euler(0, 0, bossSweepSpeed * Time.deltaTime) * aimDirection;
+                    transform.rotation = Quaternion.LookRotation(Vector3.forward, aimDirection);
+                }
+
+                UpdateBeam(beamWidth * SizeFactor, BeamColor);
                 TryHitPlayer();
-                if (stateTimer >= beamDuration)
+                if (stateTimer >= beamDuration * (isBoss ? bossBeamDurationMultiplier : 1f))
                 {
                     SetState(State.Cooldown);
                 }
@@ -125,15 +137,15 @@ public class LaserTurretEnemy : EnemyController
 
     private void UpdateBeam(float width, Color color)
     {
-        currentLength = beamLength;
-        if (TryFindWall(Physics2D.RaycastAll(transform.position, aimDirection, beamLength, wallMask), aimDirection, out float wallDistance))
+        currentLength = beamLength * SizeFactor;
+        if (TryFindWall(Physics2D.RaycastAll(transform.position, aimDirection, beamLength * SizeFactor, wallMask), aimDirection, out float wallDistance))
         {
             currentLength = wallDistance;
         }
 
         float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
         beam.transform.SetPositionAndRotation(transform.position, Quaternion.Euler(0, 0, angle));
-        beam.transform.localScale = new Vector3(currentLength, width, 1);
+        beam.transform.localScale = new Vector3(currentLength, width, 1) / SizeFactor; // parent is scaled for bosses
         beam.color = color;
     }
 
@@ -143,7 +155,7 @@ public class LaserTurretEnemy : EnemyController
         float along = Vector2.Dot(toPlayer, aimDirection);
         float across = Mathf.Abs(Vector2.Dot(toPlayer, new Vector2(-aimDirection.y, aimDirection.x)));
 
-        if (along >= 0 && along <= currentLength && across <= beamWidth / 2f)
+        if (along >= 0 && along <= currentLength && across <= beamWidth * SizeFactor / 2f)
         {
             playerController.TakeDamage(1);
         }

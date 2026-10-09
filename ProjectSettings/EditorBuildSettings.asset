@@ -6,6 +6,27 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Levels/Level_1_Archer.unity
+    guid: 54584e901ebb83349878eb0efeb59d55
+  - enabled: 1
+    path: Assets/Scenes/Levels/Level_2_Chaser.unity
+    guid: e00870da32543164aa624ec12725812b
+  - enabled: 1
+    path: Assets/Scenes/Levels/Level_3_Thwomp.unity
+    guid: 54561676254b7074b852cf5bed627b1e
+  - enabled: 1
+    path: Assets/Scenes/Levels/Level_4_Sentry.unity
+    guid: 1ea494f6c851e364f89195033b60a576
+  - enabled: 1
+    path: Assets/Scenes/Levels/Level_5_Spinner.unity
+    guid: 73fe6d62d1663f946b2192bb790d5ed5
+  - enabled: 1
+    path: Assets/Scenes/Levels/Level_6_Summoner.unity
+    guid: ebf214b8c6808064081b962655a7a53e
+  - enabled: 1
+    path: Assets/Scenes/Levels/Level_7_Laser.unity
+    guid: 5a318b1086ca1dd42ac1ecb37f9efeb7
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 2cda990e2423bbf4892e6590ba056729
   m_configObjects:

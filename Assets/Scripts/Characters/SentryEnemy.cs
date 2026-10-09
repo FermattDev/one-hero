@@ -9,6 +9,7 @@ public class SentryEnemy : EnemyController
     [Header("Patrol (offsets from the start position, walked in order and back)")]
     [SerializeField] private List<Vector2> patrolOffsets = new List<Vector2> { new Vector2(3, 0) };
     [SerializeField] private float patrolSpeed = 1.5f;
+    [SerializeField] private float bossSpeedMultiplier = 6f;
 
     [Header("Vision")]
     [SerializeField] private float viewAngle = 90f;
@@ -44,6 +45,24 @@ public class SentryEnemy : EnemyController
     protected override void Behave()
     {
         alerted = CanSeePlayer();
+
+        if (isBoss)
+        {
+            // Boss keeps sprinting along its patrol while shooting the player.
+            Patrol();
+
+            if (alerted)
+            {
+                transform.rotation = Quaternion.LookRotation(Vector3.forward, playerController.transform.position - transform.position);
+
+                if (fireTask is not { IsCompleted: false })
+                {
+                    fireTask = AvatarFire(playerController.transform);
+                }
+            }
+
+            return;
+        }
 
         if (alerted)
         {
@@ -105,7 +124,7 @@ public class SentryEnemy : EnemyController
             transform.rotation = Quaternion.LookRotation(Vector3.forward, delta);
         }
 
-        transform.position = Vector3.MoveTowards(transform.position, target, patrolSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, target, patrolSpeed * (isBoss ? bossSpeedMultiplier : 1f) * Time.deltaTime);
     }
 
     protected override async Task AvatarFire(object value)
@@ -120,8 +139,6 @@ public class SentryEnemy : EnemyController
         Transform target = (Transform)value;
         var direction = (target.position - transform.position).normalized;
 
-        var projectile = Instantiate(projectilePrefab);
-        projectile.transform.position = transform.position;
-        projectile.SetProjectileDirection(direction);
+        SpawnProjectile(projectilePrefab, direction);
     }
 }

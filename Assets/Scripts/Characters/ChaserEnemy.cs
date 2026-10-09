@@ -5,6 +5,7 @@ public class ChaserEnemy : EnemyController
 {
     [SerializeField] private float moveSpeed = 1.5f;
     [SerializeField] private float contactRadius = 0.6f;
+    [SerializeField] private float bossSpeedMultiplier = 2f;
 
     private bool chasing;
     private Vector3 startPosition;
@@ -45,13 +46,13 @@ public class ChaserEnemy : EnemyController
             chasing = true;
         }
 
-        if (toPlayer.magnitude <= contactRadius)
+        if (toPlayer.magnitude <= contactRadius * SizeFactor)
         {
             playerController.TakeDamage(1);
             return;
         }
 
         transform.rotation = Quaternion.LookRotation(Vector3.forward, toPlayer);
-        transform.position += toPlayer.normalized * moveSpeed * Time.deltaTime;
+        transform.position += toPlayer.normalized * moveSpeed * (isBoss ? bossSpeedMultiplier : 1f) * Time.deltaTime;
     }
 }

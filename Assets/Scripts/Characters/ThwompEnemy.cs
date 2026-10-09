@@ -16,6 +16,7 @@ public class ThwompEnemy : EnemyController
     [SerializeField] private float wallCheckRadius = 0.4f;
     [SerializeField] private float contactRadius = 0.6f;
     [SerializeField] private bool invulnerable = true;
+    [SerializeField] private float bossChargeMultiplier = 2f;
 
     // Gap left between the thwomp and the wall it stops at, so it never rests inside the wall collider.
     private const float WallSkin = 0.02f;
@@ -31,7 +32,7 @@ public class ThwompEnemy : EnemyController
 
     public override void TakeDamage(int amount)
     {
-        if (!invulnerable)
+        if (!invulnerable || isBoss)
         {
             base.TakeDamage(amount);
         }
@@ -64,10 +65,10 @@ public class ThwompEnemy : EnemyController
         direction = Vector2.zero;
         Vector2 offset = playerController.transform.position - transform.position;
 
-        if (detectUp && TryLane(offset, Vector2.up)) { direction = Vector2.up; return true; }
-        if (detectDown && TryLane(offset, Vector2.down)) { direction = Vector2.down; return true; }
-        if (detectLeft && TryLane(offset, Vector2.left)) { direction = Vector2.left; return true; }
-        if (detectRight && TryLane(offset, Vector2.right)) { direction = Vector2.right; return true; }
+        if ((detectUp || isBoss) && TryLane(offset, Vector2.up)) { direction = Vector2.up; return true; }
+        if ((detectDown || isBoss) && TryLane(offset, Vector2.down)) { direction = Vector2.down; return true; }
+        if ((detectLeft || isBoss) && TryLane(offset, Vector2.left)) { direction = Vector2.left; return true; }
+        if ((detectRight || isBoss) && TryLane(offset, Vector2.right)) { direction = Vector2.right; return true; }
         return false;
     }
 
@@ -75,7 +76,7 @@ public class ThwompEnemy : EnemyController
     {
         float along = Vector2.Dot(offset, dir);
         float across = Mathf.Abs(Vector2.Dot(offset, new Vector2(-dir.y, dir.x)));
-        if (along <= 0 || along > detectionRange || across > laneHalfWidth)
+        if (along <= 0 || along > detectionRange || across > laneHalfWidth * SizeFactor)
         {
             return false;
         }
@@ -86,8 +87,8 @@ public class ThwompEnemy : EnemyController
 
     private void Charge()
     {
-        float step = chargeSpeed * Time.deltaTime;
-        var hits = Physics2D.CircleCastAll(transform.position, wallCheckRadius, chargeDirection, step, wallMask);
+        float step = chargeSpeed * (isBoss ? bossChargeMultiplier : 1f) * Time.deltaTime;
+        var hits = Physics2D.CircleCastAll(transform.position, wallCheckRadius * SizeFactor, chargeDirection, step, wallMask);
 
         if (TryFindWall(hits, chargeDirection, out float distance))
         {
@@ -102,7 +103,7 @@ public class ThwompEnemy : EnemyController
     private void TryHitPlayer()
     {
         if (playerController != null &&
-            (playerController.transform.position - transform.position).magnitude <= contactRadius)
+            (playerController.transform.position - transform.position).magnitude <= contactRadius * SizeFactor)
         {
             playerController.TakeDamage(1);
         }

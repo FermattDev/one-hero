@@ -22,9 +22,14 @@ public class ManagerLocator
 
     public bool SetManager<T>(Manager newManager)
     {
-        foreach (var manager in managers)
+        if (managers.TryGetValue(typeof(T), out var existing))
         {
-            if (manager.GetType() == typeof(T))
+            // The locator outlives scene loads, so a manager from a previous scene may be a destroyed leftover.
+            if (existing is UnityEngine.Object unityObject && unityObject == null)
+            {
+                managers.Remove(typeof(T));
+            }
+            else
             {
                 Debug.LogError($"Manager of type {typeof(T)} already exists in the locator");
                 return false;
@@ -34,9 +39,22 @@ public class ManagerLocator
         return true;
     }
 
+    public void RemoveManager<T>(Manager manager)
+    {
+        if (managers.TryGetValue(typeof(T), out var existing) && ReferenceEquals(existing, manager))
+        {
+            managers.Remove(typeof(T));
+        }
+    }
+
     public static bool Set<T>(Manager newManager)
     {
         return GetInstance().SetManager<T>(newManager);
+    }
+
+    public static void Remove<T>(Manager manager)
+    {
+        GetInstance().RemoveManager<T>(manager);
     }
 
     public static T Get<T>()

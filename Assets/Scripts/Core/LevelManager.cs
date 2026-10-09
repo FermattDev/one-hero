@@ -57,6 +57,11 @@ public class LevelManager : MonoBehaviour, Manager
         }
     }
 
+    private void OnDestroy()
+    {
+        ManagerLocator.Remove<LevelManager>(this);
+    }
+
     private void OnPlayerDeadHandler()
     {
         ghostActions.Add(playerInstance.GetActionRecorder());

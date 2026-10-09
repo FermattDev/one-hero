@@ -8,9 +8,13 @@ public class SpinnerEnemy : EnemyController
     [SerializeField] private ProjectileController projectilePrefab;
     [SerializeField] private float spinSpeed = 90f;
 
+    [Header("Boss")]
+    [SerializeField] private int bossDirectionCount = 16;
+    [SerializeField] private float bossSpinSpeed = 240f;
+
     protected override void Behave()
     {
-        transform.Rotate(0, 0, spinSpeed * Time.deltaTime);
+        transform.Rotate(0, 0, (isBoss ? bossSpinSpeed : spinSpeed) * Time.deltaTime);
 
         if ((playerController.transform.position - transform.position).magnitude > detectionRange)
         {
@@ -34,13 +38,29 @@ public class SpinnerEnemy : EnemyController
             return;
         }
 
-        for (int i = 0; i < DirectionCount; i++)
+        int count = isBoss ? bossDirectionCount : DirectionCount;
+        for (int i = 0; i < count; i++)
         {
-            Vector3 direction = Quaternion.Euler(0, 0, i * (360f / DirectionCount)) * transform.up;
+            Vector3 direction = Quaternion.Euler(0, 0, i * (360f / count)) * transform.up;
+            SpawnProjectile(projectilePrefab, direction);
+        }
 
-            var projectile = Instantiate(projectilePrefab);
-            projectile.transform.position = transform.position;
-            projectile.SetProjectileDirection(direction);
+        if (!isBoss)
+        {
+            return;
+        }
+
+        // Boss fires a second ring, offset by half a step, shortly after the first.
+        await Task.Delay(300);
+        if (health <= 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            Vector3 direction = Quaternion.Euler(0, 0, (i + 0.5f) * (360f / count)) * transform.up;
+            SpawnProjectile(projectilePrefab, direction);
         }
     }
 }
