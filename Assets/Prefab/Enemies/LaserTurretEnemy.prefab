@@ -82,7 +82,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2413806693520163455, guid: 4adeaf2d2b1c7417e89f026626d8264f, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.5, g: 0.5, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -102,8 +102,9 @@ GameObject:
   m_Component:
   - component: {fileID: 6897671457128629751}
   - component: {fileID: 6897671457128629750}
+  - component: {fileID: 7770000003}
   m_Layer: 0
-  m_Name: Enemy
+  m_Name: LaserTurretEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -118,7 +119,7 @@ Transform:
   m_GameObject: {fileID: 6897671457128629753}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 8.33, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -134,9 +135,55 @@ MonoBehaviour:
   m_GameObject: {fileID: 6897671457128629753}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b83ac4e285ef9e4aa44e57d28f8c8f0, type: 3}
+  m_Script: {fileID: 11500000, guid: 293a4b5c6d7e8f9a0b1c2d3e4f506178, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  projectilePrefab: {fileID: 2228267147140375583, guid: ff96a32f1e2b74146b45c0ec26c75385, type: 3}
-  detectionRange: 3
-  fireDelay: 1
+  EnemySprite: {fileID: 6897671457041494837}
+  detectionRange: 8
+  chargeTime: 1.5
+  beamDuration: 0.5
+  cooldown: 2
+  beamLength: 10
+  beamWidth: 0.3
+  wallMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  maxHealth: 5
+  lifebarOffset: {x: 0, y: 0.8, z: 0}
+  lifebarSize: {x: 1, y: 0.12}
+--- !u!58 &7770000003
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6897671457128629753}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.5

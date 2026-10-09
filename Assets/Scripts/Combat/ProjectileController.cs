@@ -1,20 +1,14 @@
 using UnityEngine;
 
-public class ProjectileController : MonoBehaviour
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Collider2D))]
+public abstract class ProjectileController : MonoBehaviour
 {
     [SerializeField] private float projectileSpeed;
-
-    private Transform projectileCreator;
 
     private void Update()
     {
         transform.position += transform.forward * projectileSpeed * Time.deltaTime;
-
-        if (CheckEnemyHit())
-        {
-            Destroy(gameObject);
-            return;
-        }
 
         if(Camera.main != null)
         {
@@ -28,29 +22,7 @@ public class ProjectileController : MonoBehaviour
         }
     }
 
-    private bool CheckEnemyHit()
-    {
-        // Enemy projectiles must not damage other enemies.
-        if (projectileCreator != null && projectileCreator.GetComponent<EnemyController>() != null)
-        {
-            return false;
-        }
-
-        foreach (var enemy in EnemyController.Active)
-        {
-            if (enemy.IsHitBy(transform.position))
-            {
-                enemy.TakeDamage(1);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void SetProjectileCreator(Transform creator)
-    {
-        projectileCreator = creator;
-    }
+    protected abstract void OnTriggerEnter2D(Collider2D other);
 
     public void SetProjectileDirection(Vector3 direction)
     {

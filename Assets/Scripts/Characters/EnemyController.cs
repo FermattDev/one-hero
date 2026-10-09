@@ -2,29 +2,25 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class EnemyController : MonoBehaviour
+public abstract class EnemyController : MonoBehaviour
 {
-    [SerializeField] private ProjectileController projectilePrefab;
-    [SerializeField] private float detectionRange = 3;
-    [SerializeField] protected float fireDelay = 1f;
+    [SerializeField] private GameObject EnemySprite;
+    [SerializeField] protected float detectionRange = 3;
+    [SerializeField] protected float fireCharge = 1f;
 
-    private PlayerController playerController;
-    private List<KeyValuePair<float, KeyValuePair<string, object>>> actionRecorder = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
-
-    private List<KeyValuePair<float, KeyValuePair<string, object>>> actionPlayer = new List<KeyValuePair<float, KeyValuePair<string, object>>>();
-    private bool actionStart = false;
-    private float timeStart;
-    private Task fireTask;
-    private int index = 0;
+    protected PlayerController playerController;
+    
+    protected Task fireTask;
 
     [SerializeField] private int maxHealth = 5;
     [SerializeField] private float hitRadius = 0.5f;
     [SerializeField] private Vector3 lifebarOffset = new Vector3(0, 0.8f, 0);
     [SerializeField] private Vector2 lifebarSize = new Vector2(1f, 0.12f);
 
-    public static readonly List<EnemyController> Active = new List<EnemyController>();
+    //public static readonly List<EnemyController> Active = new List<EnemyController>();
 
-    private int health;
+    protected int health;
+    private LevelManager levelManager;
     private Transform lifebarRoot;
     private Transform lifebarFill;
     private SpriteRenderer lifebarFillRenderer;
@@ -36,42 +32,33 @@ public class EnemyController : MonoBehaviour
         CreateLifebar();
     }
 
-    private void OnEnable()
-    {
-        Active.Add(this);
-    }
-
-    private void OnDisable()
-    {
-        Active.Remove(this);
-    }
-
     private void OnDestroy()
     {
+        if (levelManager != null)
+        {
+            levelManager.OnLevelReset -= ResetEnemy;
+        }
+
         if (lifebarRoot != null)
         {
             Destroy(lifebarRoot.gameObject);
         }
     }
 
-    public bool IsHitBy(Vector3 point)
-    {
-        point.z = transform.position.z;
-        return (point - transform.position).sqrMagnitude <= hitRadius * hitRadius;
-    }
+    public bool IsAlive => health > 0;
 
-    public void TakeDamage(int amount)
+    public virtual void TakeDamage(int amount)
     {
         health = Mathf.Max(0, health - amount);
         UpdateLifebar();
 
-        if (health == 0)
+        if (health <= 0)
         {
             AvatarDead();
         }
     }
 
-    private static Sprite GetWhiteSprite()
+    protected static Sprite GetWhiteSprite()
     {
         if (whiteSprite == null)
         {
@@ -129,91 +116,77 @@ public class EnemyController : MonoBehaviour
 
     private void Start()
     {
-        var levelManager = ManagerLocator.Get<LevelManager>();
+        levelManager = ManagerLocator.Get<LevelManager>();
         levelManager.OnLevelReset += ResetEnemy;
         playerController = levelManager.GetPlayerController();
     }
 
-    public void ResetEnemy(PlayerController player)
+    protected virtual void ResetEnemy(PlayerController player)
     {
         playerController = player;
-        actionStart = true;
-        timeStart = Time.time;
-        index = 0;
+        health = maxHealth;
+        UpdateLifebar();
+        EnemySprite.SetActive(true);
     }
-
-    protected virtual async Task AvatarFire(object value)
-    {
-        Vector3 direction = (Vector3)value;
-
-        var projectile = Instantiate(projectilePrefab);
-        projectile.transform.position = transform.position;
-        projectile.SetProjectileDirection(direction.normalized);
-        projectile.SetProjectileCreator(transform);
-
-        if(!actionStart)
-        {
-            AddActionToRecorder("Fire", true);
-        }
-
-        await Task.Delay((int)(fireDelay * 1000));
-    }
-
-    private void AddActionToRecorder(string key, object value)
-    {
-        var actionValue = new KeyValuePair<string, object>(key, value);
-        var action = new KeyValuePair<float, KeyValuePair<string, object>>(Time.time - timeStart, actionValue);
-        actionRecorder.Add(action);
-    }
+    
+    protected abstract Task AvatarFire(object value);
 
     protected virtual void AvatarDead()
     {
-        Destroy(gameObject);
-
-        if (!actionStart)
-        {
-            AddActionToRecorder("Dead", true);
-        }
+        EnemySprite.SetActive(false);
     }
 
     private void Update()
     {
-        if (!actionStart)
+        if(playerController == null || health <= 0)
         {
-            if(playerController == null || (fireTask != null && !fireTask.IsCompleted))
-            {
-                return;
-            }
-            if((playerController.transform.position - transform.position).magnitude < detectionRange)
-            {
-                Vector3 direction = playerController.transform.position - transform.position;
-                Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
-                transform.rotation = rotation;
-
-                fireTask = AvatarFire(direction);
-            }
             return;
         }
-        if (actionPlayer.Count > index)
-        {
-            if ((actionPlayer[index].Key) < Time.time - timeStart)
-            {
-                switch (actionPlayer[index].Value.Key)
-                {
-                    case "Fire":
-                        fireTask = AvatarFire(actionPlayer[index].Value.Value);
-                        break;
-                    case "Dead":
-                        AvatarDead();
-                        break;
-                }
 
-                index++;
-            }
-        }
-        else
+        Behave();
+    }
+
+    // Default behaviour: face the player and fire while in range. Subclasses can override.
+    protected virtual void Behave()
+    {
+        if ((playerController.transform.position - transform.position).magnitude > detectionRange)
         {
-            actionStart = false;
+            return;
         }
+        
+        Vector3 direction = playerController.transform.position - transform.position;
+        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
+        transform.rotation = rotation;
+        
+        if(fireTask is { IsCompleted: false })
+        {
+            return;
+        }
+        
+        fireTask = AvatarFire(playerController.transform);
+    }
+
+    // Nearest hit that is not a character (enemies and the player are not walls).
+    protected static bool TryFindWall(RaycastHit2D[] hits, Vector2 moveDirection, out float distance)
+    {
+        distance = float.MaxValue;
+        foreach (var hit in hits)
+        {
+            if (hit.collider.GetComponentInParent<EnemyController>() != null ||
+                hit.collider.GetComponentInParent<PlayerController>() != null)
+            {
+                continue;
+            }
+
+            // Ignore surfaces we are moving away from or sliding along (e.g. the wall we just stopped at).
+            if (Vector2.Dot(hit.normal, moveDirection) >= -0.01f)
+            {
+                continue;
+            }
+
+            distance = Mathf.Min(distance, hit.distance);
+        }
+
+        return distance != float.MaxValue;
     }
 }

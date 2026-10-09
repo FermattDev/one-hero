@@ -29,7 +29,6 @@ public class AvatarController : MonoBehaviour
         var projectile = Instantiate(projectilePrefab);
         projectile.transform.position = transform.position;
         projectile.SetProjectileDirection(currentMovement);
-        projectile.SetProjectileCreator(transform);
 
         await Task.Delay((int)(fireDelay * 1000));
     }
@@ -38,6 +37,11 @@ public class AvatarController : MonoBehaviour
     {
         currentDashMovement = currentMovement;
         TriggerDash();
+    }
+
+    public virtual void TakeDamage(int amount)
+    {
+        AvatarDead();
     }
 
     protected virtual void AvatarDead()
